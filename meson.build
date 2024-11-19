@@ -1,4 +1,4 @@
-project('nvencodeapi', ['c'], version: 'v0.0', license: 'mixed')
+project('nvenc', ['c'], version: 'v0.0', license: 'mixed')
 
 include_path = include_directories('./include')
 

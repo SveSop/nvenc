@@ -9,11 +9,11 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-NVENCODEAPI_SRC_DIR=`dirname $(readlink -f $0)`
-NVENCODEAPI_BUILD_DIR=$(realpath "$1")"/nvencodeapi"
+NVENC_SRC_DIR=`dirname $(readlink -f $0)`
+NVENC_BUILD_DIR=$(realpath "$1")"/nvenc"
 
-if [ -e "$NVENCODEAPI_BUILD_DIR" ]; then
-  echo "Build directory $NVENCODEAPI_BUILD_DIR already exists"
+if [ -e "$NVENC_BUILD_DIR" ]; then
+  echo "Build directory $NVENC_BUILD_DIR already exists"
   exit 1
 fi
 
@@ -22,26 +22,26 @@ fi
 function build_arch {
   export WINEARCH="win$1"
 
-  cd "$NVENCODEAPI_SRC_DIR"
+  cd "$NVENC_SRC_DIR"
 
-  meson --cross-file "$NVENCODEAPI_SRC_DIR/build-wine$1.txt"  \
-        --buildtype release                                   \
-        --prefix "$NVENCODEAPI_BUILD_DIR"                     \
-        --libdir lib$1                                        \
-	--strip                                               \
-        "$NVENCODEAPI_BUILD_DIR/build.$1"
+  meson --cross-file "$NVENC_SRC_DIR/build-wine$1.txt"  \
+        --buildtype release                             \
+        --prefix "$NVENC_BUILD_DIR"                     \
+        --libdir lib$1                                  \
+	--strip                                         \
+        "$NVENC_BUILD_DIR/build.$1"
 
-  cd "$NVENCODEAPI_BUILD_DIR/build.$1"
+  cd "$NVENC_BUILD_DIR/build.$1"
   ninja install
 
-  rm -R "$NVENCODEAPI_BUILD_DIR/build.$1"
+  rm -R "$NVENC_BUILD_DIR/build.$1"
 }
 
 build_arch 64
 build_arch 32
 
 # cleanup
-cd $NVENCODEAPI_BUILD_DIR
+cd $NVENC_BUILD_DIR
 find . -name \*.a -type f -delete
 mv lib32 lib
 echo "Done building!"
