@@ -3,10 +3,8 @@ Standalone version of nvencodeapi and nvcuvid
 This work originates from Wine-Staging  
 
 The master branch is meant for keeping up-to-date with  
-upstream wine-staging implementation of nvencodeapi and nvcuvid.  
-
-The `devel` branch is current development to support newer API than  
-the wine-staging branch that is no longer in active development.  
+current driver implementation of nvencodeapi and nvcuvid,  
+and thus recommend using driver of recent date. (565+).  
 
 ## Build requirements:  
 - [WINE] (version >= 9.x) [https://www.winehq.org/](https://www.winehq.org/)  
