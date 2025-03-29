@@ -29,7 +29,8 @@ typedef struct _CUVIDPROCPARAMS CUVIDPROCPARAMS;
 typedef struct _CUVIDDECODECAPS CUVIDDECODECAPS;
 typedef struct _CUVIDGETDECODESTATUS CUVIDGETDECODESTATUS;
 
-typedef enum cudaVideoCodec_enum {
+typedef enum cudaVideoCodec_enum
+{
     cudaVideoCodec_MPEG1=0,
     cudaVideoCodec_MPEG2,
     cudaVideoCodec_MPEG4,
@@ -50,21 +51,24 @@ typedef enum cudaVideoCodec_enum {
     cudaVideoCodec_UYVY   = (('U'<<24)|('Y'<<16)|('V'<<8)|('Y'))
 } cudaVideoCodec;
 
-typedef enum cudaVideoChromaFormat_enum {
+typedef enum cudaVideoChromaFormat_enum
+{
     cudaVideoChromaFormat_Monochrome=0,
     cudaVideoChromaFormat_420,
     cudaVideoChromaFormat_422,
     cudaVideoChromaFormat_444
 } cudaVideoChromaFormat;
 
-typedef enum cudaVideoSurfaceFormat_enum {
+typedef enum cudaVideoSurfaceFormat_enum
+{
     cudaVideoSurfaceFormat_NV12=0,
     cudaVideoSurfaceFormat_P016=1,
     cudaVideoSurfaceFormat_YUV444=2,
     cudaVideoSurfaceFormat_YUV444_16Bit=3,
 } cudaVideoSurfaceFormat;
 
-typedef enum cudaVideoDeinterlaceMode_enum {
+typedef enum cudaVideoDeinterlaceMode_enum
+{
     cudaVideoDeinterlaceMode_Weave=0,
     cudaVideoDeinterlaceMode_Bob,
     cudaVideoDeinterlaceMode_Adaptive
