@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Michael Müller
+ * Copyright (C) 2025 Sveinar Søpler
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,14 +23,15 @@
 #ifndef __WINE_NVENCODEAPI_H
 #define __WINE_NVENCODEAPI_H
 
-#define NVENCAPI_MAJOR_VERSION 12
-#define NVENCAPI_MINOR_VERSION 1
+#define NVENCAPI_MAJOR_VERSION 13
+#define NVENCAPI_MINOR_VERSION 0
 
 #define NVENCAPI_VERSION (NVENCAPI_MAJOR_VERSION | (NVENCAPI_MINOR_VERSION << 24))
 #define NVENCAPI_STRUCT_VERSION(ver) ((uint32_t)NVENCAPI_VERSION | ((ver)<<16) | (0x7 << 28))
 
 #define NVENCSTATUS int
 #define NV_ENC_SUCCESS 0
+#define NV_ENC_ERR_UNSUPPORTED_DEVICE 2
 #define NV_ENC_ERR_INVALID_PTR 6
 #define NV_ENC_ERR_UNSUPPORTED_PARAM 12
 #define NV_ENC_ERR_INVALID_VERSION 15
@@ -60,13 +62,15 @@ typedef struct _NV_ENC_STAT NV_ENC_STAT;
 typedef struct _NV_ENC_SEQUENCE_PARAM_PAYLOAD NV_ENC_SEQUENCE_PARAM_PAYLOAD;
 typedef struct _NV_ENC_EVENT_PARAMS NV_ENC_EVENT_PARAMS;
 typedef struct _NV_ENC_OPEN_ENCODE_SESSIONEX_PARAMS NV_ENC_OPEN_ENCODE_SESSIONEX_PARAMS;
-typedef struct _NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS;
 typedef struct _NV_ENC_CREATE_MV_BUFFER NV_ENC_CREATE_MV_BUFFER;
 typedef struct _NV_ENC_MEONLY_PARAMS NV_ENC_MEONLY_PARAMS;
 typedef struct _NV_ENC_TIME_CODE NV_ENC_TIME_CODE;
 typedef struct _NVENC_EXTERNAL_ME_SB_HINT NVENC_EXTERNAL_ME_SB_HINT;
 typedef struct _NV_ENC_RESTORE_ENCODER_STATE_PARAMS NV_ENC_RESTORE_ENCODER_STATE_PARAMS;
 typedef struct _NV_ENC_LOOKAHEAD_PIC_PARAMS NV_ENC_LOOKAHEAD_PIC_PARAMS;
+typedef struct _HEVC_3D_REFERENCE_DISPLAY_INFO HEVC_3D_REFERENCE_DISPLAY_INFO;
+typedef struct _MASTERING_DISPLAY_INFO MASTERING_DISPLAY_INFO;
+typedef struct _NV_ENC_FILM_GRAIN_PARAMS_AV1 NV_ENC_FILM_GRAIN_PARAMS_AV1;
 
 typedef enum _NV_ENC_BUFFER_FORMAT
 {
@@ -83,6 +87,8 @@ typedef enum _NV_ENC_BUFFER_FORMAT
     NV_ENC_BUFFER_FORMAT_ABGR                            = 0x10000000,
     NV_ENC_BUFFER_FORMAT_ABGR10                          = 0x20000000,
     NV_ENC_BUFFER_FORMAT_U8                              = 0x40000000,
+    NV_ENC_BUFFER_FORMAT_NV16                            = 0x40000001,
+    NV_ENC_BUFFER_FORMAT_P210                            = 0x40000002,
 } NV_ENC_BUFFER_FORMAT;
 #define NV_ENC_BUFFER_FORMAT_NV12_PL NV_ENC_BUFFER_FORMAT_NV12
 #define NV_ENC_BUFFER_FORMAT_YV12_PL NV_ENC_BUFFER_FORMAT_YV12
@@ -104,6 +110,37 @@ typedef enum _NV_ENC_DISPLAY_PIC_STRUCT
     NV_ENC_PIC_STRUCT_DISPLAY_FRAME_DOUBLING    = 0x03,
     NV_ENC_PIC_STRUCT_DISPLAY_FRAME_TRIPLING    = 0x04
 } NV_ENC_DISPLAY_PIC_STRUCT;
+
+typedef enum _NV_ENC_DEVICE_TYPE
+{
+    NV_ENC_DEVICE_TYPE_DIRECTX          = 0x0,
+    NV_ENC_DEVICE_TYPE_CUDA             = 0x1,
+    NV_ENC_DEVICE_TYPE_OPENGL           = 0x2
+} NV_ENC_DEVICE_TYPE;
+
+typedef struct _CHROMA_POINTS
+{
+    uint16_t x;
+    uint16_t y;
+} CHROMA_POINTS;
+
+typedef struct _NV_ENC_OPEN_ENCODE_SESSIONEX_PARAMS
+{
+    uint32_t            version;
+    NV_ENC_DEVICE_TYPE  deviceType;
+    void*               device;
+    void*               reserved;
+    uint32_t            apiVersion;
+    uint32_t            reserved1[253];
+    void*               reserved2[64];
+} NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS;
+#define NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER NVENCAPI_STRUCT_VERSION(1)
+
+typedef struct _CONTENT_LIGHT_LEVEL
+{
+    uint16_t maxContentLightLevel;
+    uint16_t maxPicAverageLightLevel;
+} CONTENT_LIGHT_LEVEL;
 
 typedef struct _NV_ENC_CLOCK_TIMESTAMP_SET
 {
@@ -144,11 +181,12 @@ typedef struct _NVENC_EXTERNAL_ME_HINT_COUNTS_PER_BLOCKTYPE
 
 typedef enum NV_ENC_TUNING_INFO
 {
-    NV_ENC_TUNING_INFO_UNDEFINED         = 0,
-    NV_ENC_TUNING_INFO_HIGH_QUALITY      = 1,
-    NV_ENC_TUNING_INFO_LOW_LATENCY       = 2,
-    NV_ENC_TUNING_INFO_ULTRA_LOW_LATENCY = 3,
-    NV_ENC_TUNING_INFO_LOSSLESS          = 4,
+    NV_ENC_TUNING_INFO_UNDEFINED          = 0,
+    NV_ENC_TUNING_INFO_HIGH_QUALITY       = 1,
+    NV_ENC_TUNING_INFO_LOW_LATENCY        = 2,
+    NV_ENC_TUNING_INFO_ULTRA_LOW_LATENCY  = 3,
+    NV_ENC_TUNING_INFO_LOSSLESS           = 4,
+    NV_ENC_TUNING_INFO_ULTRA_HIGH_QUALITY = 5,
     NV_ENC_TUNING_INFO_COUNT
 }NV_ENC_TUNING_INFO;
 
@@ -174,10 +212,12 @@ typedef struct _NV_ENC_INITIALIZE_PARAMS
     uint32_t enableOutputInVidmem     : 1;
     uint32_t enableReconFrameOutput   : 1;
     uint32_t enableOutputStats        : 1;
-    uint32_t reservedBitFields        : 20;
+    uint32_t enableUniDirectionalB    : 1;
+    uint32_t reservedBitFields        : 19;
     uint32_t privDataSize;
+    uint32_t reserved;
     void *privData;
-    void *encodeConfig;
+    NV_ENC_CONFIG *encodeConfig;
     uint32_t maxEncodeWidth;
     uint32_t maxEncodeHeight;
     NVENC_EXTERNAL_ME_HINT_COUNTS_PER_BLOCKTYPE maxMEHintCountsPerBlock[2];
@@ -185,10 +225,10 @@ typedef struct _NV_ENC_INITIALIZE_PARAMS
     NV_ENC_BUFFER_FORMAT bufferFormat;
     uint32_t numStateBuffers;
     NV_ENC_OUTPUT_STATS_LEVEL outputStatsLevel;
-    uint32_t reserved[285];
+    uint32_t reserved1[284];
     void *reserved2[64];
 } NV_ENC_INITIALIZE_PARAMS;
-#define NV_ENC_INITIALIZE_PARAMS_VER (NVENCAPI_STRUCT_VERSION(6) | ( 1<<31 ))
+#define NV_ENC_INITIALIZE_PARAMS_VER (NVENCAPI_STRUCT_VERSION(7) | ( 1<<31 ))
 
 typedef struct _NV_ENC_PIC_PARAMS_MVC
 {
@@ -232,7 +272,7 @@ typedef struct _NV_ENC_PIC_PARAMS_H264
     uint32_t *forceIntraSliceIdx;
     NV_ENC_PIC_PARAMS_H264_EXT h264ExtPicParams;
     NV_ENC_TIME_CODE timeCode;
-    uint32_t reserved[203];
+    uint32_t reserved[202];
     void *reserved2[61];
 } NV_ENC_PIC_PARAMS_H264;
 
@@ -257,14 +297,60 @@ typedef struct _NV_ENC_PIC_PARAMS_HEVC
     uint32_t reserved;
     NV_ENC_SEI_PAYLOAD *seiPayloadArray;
     NV_ENC_TIME_CODE timeCode;
-    uint32_t reserved2[237];
-    void *reserved3[61];
+    uint32_t numTemporalLayers;
+    uint32_t viewId;
+    HEVC_3D_REFERENCE_DISPLAY_INFO *p3DReferenceDisplayInfo;
+    CONTENT_LIGHT_LEVEL *pMaxCll;
+    MASTERING_DISPLAY_INFO *pMasteringDisplay;
+    uint32_t reserved2[234];
+    void *reserved3[58];
 } NV_ENC_PIC_PARAMS_HEVC;
+#define NV_ENC_AV1_OBU_PAYLOAD NV_ENC_SEI_PAYLOAD
+
+typedef struct _NV_ENC_PIC_PARAMS_AV1
+{
+    uint32_t displayPOCSyntax;
+    uint32_t refPicFlag;
+    uint32_t temporalId;
+    uint32_t forceIntraRefreshWithFrameCnt;
+    uint32_t goldenFrameFlag            : 1;
+    uint32_t arfFrameFlag               : 1;
+    uint32_t arf2FrameFlag              : 1;
+    uint32_t bwdFrameFlag               : 1;
+    uint32_t overlayFrameFlag           : 1;
+    uint32_t showExistingFrameFlag      : 1;
+    uint32_t errorResilientModeFlag     : 1;
+    uint32_t tileConfigUpdate           : 1;
+    uint32_t enableCustomTileConfig     : 1;
+    uint32_t filmGrainParamsUpdate      : 1;
+    uint32_t ltrMarkFrame               : 1;
+    uint32_t ltrUseFrames               : 1;
+    uint32_t temporalConfigUpdate       : 1;
+    uint32_t reservedBitFields          : 19;
+    uint32_t numTileColumns;
+    uint32_t numTileRows;
+    uint32_t reserved;
+    uint32_t *tileWidths;
+    uint32_t *tileHeights;
+    uint32_t obuPayloadArrayCnt;
+    uint32_t reserved1;
+    NV_ENC_AV1_OBU_PAYLOAD* obuPayloadArray;
+    NV_ENC_FILM_GRAIN_PARAMS_AV1 *filmGrainParams;
+    uint32_t ltrMarkFrameIdx;
+    uint32_t ltrUseFrameBitmap;
+    uint32_t numTemporalLayers;
+    uint32_t reserved4;
+    CONTENT_LIGHT_LEVEL *pMaxCll;
+    MASTERING_DISPLAY_INFO *pMasteringDisplay;
+    uint32_t reserved2[242];
+    void*    reserved3[59];
+} NV_ENC_PIC_PARAMS_AV1;
 
 typedef union _NV_ENC_CODEC_PIC_PARAMS
 {
     NV_ENC_PIC_PARAMS_H264 h264PicParams;
     NV_ENC_PIC_PARAMS_HEVC hevcPicParams;
+    NV_ENC_PIC_PARAMS_AV1  av1PicParams;
     uint32_t reserved[256];
 } NV_ENC_CODEC_PIC_PARAMS;
 
@@ -289,8 +375,8 @@ typedef struct _NV_ENC_PIC_PARAMS
     uint32_t frameIdx;
     uint64_t inputTimeStamp;
     uint64_t inputDuration;
-    void *inputBuffer;
-    void *outputBitstream;
+    NV_ENC_INPUT_PTR inputBuffer;
+    NV_ENC_OUTPUT_PTR outputBitstream;
     void *completionEvent;
     int bufferFmt;
     int pictureStruct;
@@ -298,21 +384,22 @@ typedef struct _NV_ENC_PIC_PARAMS
     NV_ENC_CODEC_PIC_PARAMS codecPicParams;
     struct _NVENC_EXTERNAL_ME_HINT_COUNTS_PER_BLOCKTYPE meHintCountsPerBlock[2];
     struct _NVENC_EXTERNAL_ME_HINT *meExternalHints;
-    uint32_t reserved1[6];
-    void *reserved2[2];
+    uint32_t reserved1[7];
+    void *reserved5[2];
     int8_t *qpDeltaMap;
     uint32_t qpDeltaMapSize;
     uint32_t reservedBitFields;
     uint16_t meHintRefPicDist[2];
+    uint32_t reserved4;
     NV_ENC_INPUT_PTR alphaBuffer;
     NVENC_EXTERNAL_ME_SB_HINT *meExternalSbHints;
     uint32_t meSbHintsCount;
     uint32_t stateBufferIdx;
     NV_ENC_OUTPUT_PTR outputReconBuffer;
     uint32_t reserved3[284];
-    void *reserved4[57];
+    void *reserved6[57];
 } NV_ENC_PIC_PARAMS;
-#define NV_ENC_PIC_PARAMS_VER (NVENCAPI_STRUCT_VERSION(6) | ( 1<<31 ))
+#define NV_ENC_PIC_PARAMS_VER (NVENCAPI_STRUCT_VERSION(7) | ( 1<<31 ))
 
 typedef struct __NV_ENCODE_API_FUNCTION_LIST
 {
