@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Michael Müller
+ * Copyright (C) 2025 Sveinar Søpler
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -42,7 +43,8 @@ typedef struct _CUVIDPARSERPARAMS
     unsigned int ulErrorThreshold;
     unsigned int ulMaxDisplayDelay;
     unsigned int bAnnexb : 1;
-    unsigned int uReserved : 31;
+    unsigned int bMemoryOptimize : 1;
+    unsigned int uReserved : 30;
     unsigned int uReserved1[4];
     void *pUserData;
     void *pfnSequenceCallback;

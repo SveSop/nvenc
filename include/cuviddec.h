@@ -65,6 +65,8 @@ typedef enum cudaVideoSurfaceFormat_enum
     cudaVideoSurfaceFormat_P016=1,
     cudaVideoSurfaceFormat_YUV444=2,
     cudaVideoSurfaceFormat_YUV444_16Bit=3,
+    cudaVideoSurfaceFormat_NV16=4,
+    cudaVideoSurfaceFormat_P216=5
 } cudaVideoSurfaceFormat;
 
 typedef enum cudaVideoDeinterlaceMode_enum
