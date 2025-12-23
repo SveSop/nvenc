@@ -19,25 +19,20 @@ fi
 
 # build nvencodeapi
 
-function build_arch {
-  export WINEARCH="win$1"
+cd "$NVENC_SRC_DIR"
 
-  cd "$NVENC_SRC_DIR"
+meson setup                                           \
+      --cross-file "$NVENC_SRC_DIR/build-wine64.txt"  \
+      --buildtype release                             \
+      --prefix "$NVENC_BUILD_DIR"                     \
+      --libdir "x64"                                  \
+      --strip                                         \
+      "$NVENC_BUILD_DIR/build.64"
 
-  meson --cross-file "$NVENC_SRC_DIR/build-wine$1.txt"  \
-        --buildtype release                             \
-        --prefix "$NVENC_BUILD_DIR"                     \
-        --libdir "x$1"                                  \
-	--strip                                         \
-        "$NVENC_BUILD_DIR/build.$1"
+cd "$NVENC_BUILD_DIR/build.64"
+ninja install
 
-  cd "$NVENC_BUILD_DIR/build.$1"
-  ninja install
-
-  rm -R "$NVENC_BUILD_DIR/build.$1"
-}
-
-build_arch 64
+rm -R "$NVENC_BUILD_DIR/build.64"
 
 # cleanup
 cd $NVENC_BUILD_DIR
