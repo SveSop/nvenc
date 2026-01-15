@@ -5,9 +5,13 @@ nvcuvid_src = [
 thread_dep = dependency('threads')
 
 
-nvcuvid_dll = shared_library('nvcuvid.dll', nvcuvid_src,
+nvcuvid_dll = shared_library(
+  'nvcuvid.dll',
+  nvcuvid_src,
   name_prefix         : '',
   dependencies        : [ thread_dep, lib_dl ],
   include_directories : include_path,
   objects             : 'nvcuvid.spec',
-  install             : true)
+  install             : true,
+  install_dir         : install_dir_unix,
+)

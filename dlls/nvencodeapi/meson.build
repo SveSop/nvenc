@@ -5,9 +5,13 @@ nvencodeapi_src = [
 thread_dep = dependency('threads')
 
 
-nvencodeapi_dll = shared_library('nvencodeapi64.dll', nvencodeapi_src,
+nvencodeapi_dll = shared_library(
+  'nvencodeapi64.dll',
+  nvencodeapi_src,
   name_prefix         : '',
   dependencies        : [ thread_dep, lib_dl ],
   include_directories : include_path,
   objects             : 'nvencodeapi.spec',
-  install             : true)
+  install             : true,
+  install_dir         : install_dir_unix,
+)
